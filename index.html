@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SafeMeme Launchpad — Eerlijke Solana Meme Coins</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/@solana/web3.js@1.95.3/lib/index.iife.min.js"></script>
+</head>
+<body class="bg-zinc-950 text-zinc-100 min-h-screen antialiased">
+  <!-- Header -->
+  <header class="border-b border-zinc-800 bg-zinc-900/70 backdrop-blur sticky top-0 z-20">
+    <div class="max-w-5xl mx-auto px-4 py-4 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-2">
+        <span class="inline-block w-3 h-3 rounded-full bg-emerald-400"></span>
+        <span class="font-bold text-lg tracking-tight">SafeMeme Launchpad</span>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <!-- Netwerk keuze: Mainnet Beta standaard -->
+        <select id="networkSelect" class="bg-zinc-800 border border-zinc-700 text-sm rounded-lg px-3 py-2">
+          <option value="mainnet-beta" selected>Mainnet Beta</option>
+          <option value="devnet">Solana Devnet (Test)</option>
+        </select>
+
+        <!-- Wallet knop -->
+        <button id="connectBtn" class="bg-purple-600 hover:bg-purple-500 text-white font-semibold text-sm px-4 py-2 rounded-lg transition">
+          Verbind Phantom
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-5xl mx-auto px-4 py-8 space-y-8">
+    <!-- Statusbalk -->
+    <div id="walletBanner" class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 flex flex-wrap items-center justify-between gap-2 text-sm">
+      <div>
+        <span class="text-zinc-400">Wallet status:</span>
+        <span id="walletStatus" class="font-medium text-amber-400 ml-1">Niet verbonden</span>
+      </div>
+      <div class="text-xs text-zinc-400 break-all">
+        Fee-ontvanger: <span class="text-zinc-200 font-mono">9wTe2MV9ZpBM9TdRsSY9vkMVH595YSeDbvoEebnE2E6W</span>
+      </div>
+    </div>
+
+    <!-- Hoofdkolommen: Formulier + Live Preview & Anti-Rugpull -->
+    <div class="grid md:grid-cols-2 gap-6">
+      <!-- Linkerkolom: Munt Aanmaken -->
+      <section class="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 space-y-5">
+        <div>
+          <h1 class="text-xl font-bold">Nieuwe Meme Coin Lancering</h1>
+          <p class="text-sm text-zinc-400 mt-1">Aanmaakkosten: <strong class="text-white">0,3 SOL</strong>.</p>
+        </div>
+
+        <form id="launchForm" class="space-y-4">
+          <div>
+            <label class="block text-xs text-zinc-400 mb-1">Naam van de munt</label>
+            <input id="coinName" type="text" placeholder="Bijv. Rocket Dog" required
+              class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-purple-500" />
+          </div>
+
+          <div>
+            <label class="block text-xs text-zinc-400 mb-1">Ticker / Symbool</label>
+            <input id="coinSymbol" type="text" placeholder="Bijv. RDOG" maxlength="10" required
+              class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2.5 text-sm uppercase focus:outline-none focus:border-purple-500" />
+          </div>
+
+          <div>
+            <label class="block text-xs text-zinc-400 mb-1">Omschrijving</label>
+            <textarea id="coinDesc" rows="2" placeholder="Korte uitleg over je community coin..."
+              class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-purple-500"></textarea>
+          </div>
+
+          <div>
+            <label class="block text-xs text-zinc-400 mb-1">Logo uploaden</label>
+            <input id="coinImage" type="file" accept="image/*"
+              class="w-full text-sm text-zinc-400 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-zinc-800 file:text-zinc-200 hover:file:bg-zinc-700" />
+          </div>
+
+          <button type="submit" id="launchBtn"
+            class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-3 rounded-xl transition">
+            Bevestig & Betaal (0,3 SOL)
+          </button>
+        </form>
+
+        <div id="txFeedback" class="hidden text-xs p-3 rounded-lg border break-all"></div>
+      </section>
+
+      <!-- Rechterkolom: Transparantie & Preview -->
+      <section class="space-y-6">
+        <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 space-y-3">
+          <h2 class="font-bold text-zinc-100">Lanceringsoverzicht</h2>
+          <ul class="text-sm text-zinc-300 space-y-2">
+            <li>• <strong>Netwerk:</strong> Standaard ingesteld op Solana Mainnet Beta.</li>
+            <li>• <strong>Aanmaakfee:</strong> 0,3 SOL wordt rechtstreeks naar het fee-adres verstuurd.</li>
+            <li>• <strong>Wallet vereist:</strong> Open in Phantom (desktop-extensie of Phantom in-app browser) voor echte transacties.</li>
+          </ul>
+        </div>
+
+        <!-- Live Kaart Preview -->
+        <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 space-y-4">
+          <h3 class="text-xs uppercase tracking-wider text-zinc-400 font-semibold">Live Preview</h3>
+          <div class="flex items-center gap-4">
+            <img id="previewImg" src="https://placehold.co/80x80/27272a/a1a1aa?text=LOGO" alt="Logo preview"
+              class="w-16 h-16 rounded-xl object-cover bg-zinc-800 border border-zinc-700" />
+            <div>
+              <div class="flex items-center gap-2">
+                <span id="previewName" class="font-bold text-lg">Jouw Meme Coin</span>
+                <span id="previewSymbol" class="text-xs font-mono bg-zinc-800 px-2 py-0.5 rounded text-purple-300">$MEME</span>
+              </div>
+              <p id="previewDesc" class="text-xs text-zinc-400 mt-1">Community coin lancering op Solana.</p>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-2 pt-2 border-t border-zinc-800 text-xs">
+            <div class="bg-zinc-800/60 p-2.5 rounded-lg">
+              <span class="text-zinc-400 block">Aanmaakfee</span>
+              <span class="font-semibold text-white">0,30 SOL</span>
+            </div>
+            <div class="bg-zinc-800/60 p-2.5 rounded-lg">
+              <span class="text-zinc-400 block">Netwerk</span>
+              <span id="previewNetwork" class="font-semibold text-emerald-400">Mainnet Beta</span>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Sessie-overzicht -->
+    <section class="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 space-y-4">
+      <div class="grid sm:grid-cols-2 gap-4 text-sm">
+        <div class="bg-zinc-800/70 p-4 rounded-xl">
+          <span class="text-zinc-400 text-xs">Ontvangen aanmaakfees (deze sessie)</span>
+          <div id="statCreation" class="text-xl font-bold mt-1 text-white">0,0000 SOL</div>
+        </div>
+        <div class="bg-zinc-800/70 p-4 rounded-xl">
+          <span class="text-zinc-400 text-xs">Aantal bevestigde transacties (deze sessie)</span>
+          <div id="statCount" class="text-xl font-bold mt-1 text-purple-400">0</div>
+        </div>
+      </div>
+
+      <div class="pt-2">
+        <h3 class="text-xs uppercase tracking-wider text-zinc-400 font-semibold mb-2">Recente Transacties in Deze Sessie</h3>
+        <div id="coinsList" class="text-sm text-zinc-400">Nog geen transacties uitgevoerd in deze sessie.</div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const TREASURY_ADDRESS = '9wTe2MV9ZpBM9TdRsSY9vkMVH595YSeDbvoEebnE2E6W';
+    const CREATION_FEE_SOL = 0.3;
+
+    let connectedPublicKey = null;
+    let totalCreationSol = 0;
+    const launchedCoins = [];
+
+    const connectBtn = document.getElementById('connectBtn');
+    const walletStatus = document.getElementById('walletStatus');
+    const networkSelect = document.getElementById('networkSelect');
+    const txFeedback = document.getElementById('txFeedback');
+
+    function getProvider() {
+      if ('phantom' in window) {
+        const provider = window.phantom?.solana;
+        if (provider?.isPhantom) return provider;
+      }
+      if (window.solana?.isPhantom) return window.solana;
+      return null;
+    }
+
+    networkSelect.addEventListener('change', (e) => {
+      document.getElementById('previewNetwork').textContent =
+        e.target.value === 'mainnet-beta' ? 'Mainnet Beta' : 'Solana Devnet';
+    });
+
+    connectBtn.addEventListener('click', async () => {
+      const provider = getProvider();
+      if (!provider) {
+        showFeedback('Geen Phantom wallet gevonden. Open deze pagina in de Phantom-app of met de Phantom-extensie.', true);
+        return;
+      }
+      try {
+        const resp = await provider.connect();
+        connectedPublicKey = resp.publicKey.toString();
+        walletStatus.textContent = `Verbonden met Phantom: ${connectedPublicKey.slice(0, 6)}...${connectedPublicKey.slice(-6)}`;
+        walletStatus.className = 'font-medium text-emerald-400 ml-1';
+        connectBtn.textContent = 'Phantom Verbonden';
+      } catch (err) {
+        showFeedback('Verbinding met Phantom geannuleerd: ' + err.message, true);
+      }
+    });
+
+    document.getElementById('coinName').addEventListener('input', (e) => {
+      document.getElementById('previewName').textContent = e.target.value || 'Jouw Meme Coin';
+    });
+    document.getElementById('coinSymbol').addEventListener('input', (e) => {
+      document.getElementById('previewSymbol').textContent = '$' + (e.target.value.toUpperCase() || 'MEME');
+    });
+    document.getElementById('coinDesc').addEventListener('input', (e) => {
+      document.getElementById('previewDesc').textContent = e.target.value || 'Community coin lancering op Solana.';
+    });
+    document.getElementById('coinImage').addEventListener('change', (e) => {
+      const file = e.target.files?.[0];
+      if (file) {
+        document.getElementById('previewImg').src = URL.createObjectURL(file);
+      }
+    });
+
+    document.getElementById('launchForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const provider = getProvider();
+      if (!provider || !connectedPublicKey) {
+        showFeedback('Verbind eerst je Phantom wallet via de knop rechtsboven.', true);
+        return;
+      }
+
+      const name = document.getElementById('coinName').value.trim();
+      const symbol = document.getElementById('coinSymbol').value.trim().toUpperCase();
+      const network = networkSelect.value;
+
+      try {
+        showFeedback('Transactie voorbereiden... Bevestig 0,3 SOL in Phantom.', false);
+        const rpcUrl = network === 'mainnet-beta'
+          ? 'https://api.mainnet-beta.solana.com'
+          : 'https://api.devnet.solana.com';
+
+        const connection = new solanaWeb3.Connection(rpcUrl, 'confirmed');
+        const fromPubkey = new solanaWeb3.PublicKey(connectedPublicKey);
+        const toPubkey = new solanaWeb3.PublicKey(TREASURY_ADDRESS);
+
+        const transaction = new solanaWeb3.Transaction().add(
+          solanaWeb3.SystemProgram.transfer({
+            fromPubkey,
+            toPubkey,
+            lamports: Math.round(CREATION_FEE_SOL * solanaWeb3.LAMPORTS_PER_SOL),
+          })
+        );
+
+        const { blockhash } = await connection.getLatestBlockhash();
+        transaction.recentBlockhash = blockhash;
+        transaction.feePayer = fromPubkey;
+
+        const { signature } = await provider.signAndSendTransaction(transaction);
+        await connection.confirmTransaction(signature, 'confirmed');
+
+        totalCreationSol += CREATION_FEE_SOL;
+        launchedCoins.unshift({ name, symbol, signature, network });
+        updateStats();
+        renderCoins();
+        showFeedback(`Gelukt! 0,3 SOL verstuurd naar ${TREASURY_ADDRESS}. Signature: ${signature}`, false);
+      } catch (err) {
+        showFeedback('Transactie mislukt: ' + err.message, true);
+      }
+    });
+
+    function updateStats() {
+      document.getElementById('statCreation').textContent = totalCreationSol.toFixed(4) + ' SOL';
+      document.getElementById('statCount').textContent = String(launchedCoins.length);
+    }
+
+    function renderCoins() {
+      const list = document.getElementById('coinsList');
+      list.innerHTML = launchedCoins.map(c => `
+        <div class="flex flex-wrap items-center justify-between gap-2 py-2.5 border-b border-zinc-800 last:border-0">
+          <div>
+            <span class="font-semibold text-white">${c.name}</span>
+            <span class="text-xs font-mono text-purple-300 ml-1">$${c.symbol}</span>
+          </div>
+          <div class="text-xs text-zinc-400 font-mono">${c.signature.slice(0, 14)}... (${c.network})</div>
+        </div>
+      `).join('');
+    }
+
+    function showFeedback(msg, isError) {
+      txFeedback.textContent = msg;
+      txFeedback.classList.remove('hidden');
+      txFeedback.className = isError
+        ? 'text-xs p-3 rounded-lg border break-all bg-red-950/50 border-red-800 text-red-300'
+        : 'text-xs p-3 rounded-lg border break-all bg-emerald-950/50 border-emerald-800 text-emerald-300';
+    }
+  </script>
+</body>
+</html>
